@@ -9,6 +9,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
+# other shit
+from quick_styles import xprint
+from time import strftime
+from typing import WebElement
+from bs4 import BeautifulSoup
+
 class AccountMaker():
 
     LOGIN_BUTTON_XPATH = "/html/body/div[1]/div[1]/div[2]/header/div/div/div/div/a[2]"
@@ -18,10 +24,11 @@ class AccountMaker():
 
     
     def __init__(self, **kwargs):
-        headless = kwargs.get("headless")
+        headless = kwargs.get("headless", False)
         self.phone = kwargs.get("phone")
         self.domain = kwargs.get("domain")
         self.timeout = kwargs.get("timeout", 30)
+        self.logging = kwargs.get("logging", False)
 
         options = webdriver.ChromeOptions()
         options.add_experimental_option("detach", True)
@@ -33,8 +40,13 @@ class AccountMaker():
         self.driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
         if self.timeout != 'inf':
-            self.wait = WebDriverWait(self.driver, 30)
+            self.wait = WebDriverWait(self.driver, self.timeout)
+            self.driver.set_page_load_timeout(self.timeout)
     
+    def __log(self, string, **kwargs):
+        if self.logging:
+            xprint(f"[{strftime('%H:%M:%S')}] {string}", **kwargs)
+
     def __get_element(self, by, content):
         return self.driver.find_element(by, content)
     
@@ -61,11 +73,15 @@ class AccountMaker():
             return False
         return element
     
+    def __submit_input(self, element, text):
+        element.click()
+        element.send_keys(text, Keys.ENTER)
+
     def create_account(self):
         self.driver.get("https://ubereats.com")
         
     def verify_email(self):
-        pass
+        pass    
     
     def verify_phone(self):
         pass
